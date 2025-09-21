@@ -1,0 +1,15 @@
+# @package _global_
+# ロジスティック回帰モデル設定
+model:
+  name: "logistic_regression"
+  module: "sklearn.linear_model"
+  class: "LogisticRegression"
+  default_params:
+    C: 1.0
+    max_iter: 1000
+    solver: "lbfgs"
+    # random_stateはrun.pyで動的に設定される
+  optuna_space:
+    C: ["float", 0.1, 10.0]
+    max_iter: ["int", 500, 2000]
+    solver: ["categorical", ["lbfgs", "liblinear"]]

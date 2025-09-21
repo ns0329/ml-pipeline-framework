@@ -1,0 +1,27 @@
+# @package _global_
+# LightGBM回帰モデル設定
+model:
+  name: "lightgbm_regressor"
+  module: "lightgbm"
+  class: "LGBMRegressor"
+  default_params:
+    n_estimators: 50
+    learning_rate: 0.1
+    max_depth: 6
+    num_leaves: 31
+    min_child_samples: 20
+    subsample: 0.8
+    colsample_bytree: 0.8
+    reg_alpha: 0.0
+    reg_lambda: 0.0
+    verbosity: -1
+    force_col_wise: true
+    # random_stateはrun.pyで動的に設定される
+  optuna_space:
+    n_estimators: ["int", 30, 150]
+    learning_rate: ["float", 0.05, 0.3]
+    max_depth: ["int", 3, 10]
+    num_leaves: ["int", 10, 50]
+    min_child_samples: ["int", 10, 50]
+    subsample: ["float", 0.7, 1.0]
+    colsample_bytree: ["float", 0.7, 1.0]

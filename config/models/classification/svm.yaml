@@ -1,0 +1,16 @@
+# @package _global_
+model:
+  name: "svm"
+
+models:
+  svm:
+    module: "sklearn.svm"
+    class: "SVC"
+    default_params:
+      C: 1.0
+      kernel: "rbf"
+      gamma: "scale"
+    optuna_space:
+      C: ["float", 0.1, 10.0]
+      kernel: ["categorical", ["rbf", "linear", "poly"]]
+      gamma: ["categorical", ["scale", "auto"]]

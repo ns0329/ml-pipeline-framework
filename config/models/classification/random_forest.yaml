@@ -1,0 +1,18 @@
+# @package _global_
+model:
+  name: "random_forest"
+
+models:
+  random_forest:
+    module: "sklearn.ensemble"
+    class: "RandomForestClassifier"
+    default_params:
+      n_estimators: 100
+      max_depth: 10
+      min_samples_split: 2
+      min_samples_leaf: 1
+    optuna_space:
+      n_estimators: ["int", 10, 200]
+      max_depth: ["int", 3, 20]
+      min_samples_split: ["int", 2, 10]
+      min_samples_leaf: ["int", 1, 5]

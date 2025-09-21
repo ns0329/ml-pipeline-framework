@@ -1,0 +1,39 @@
+# @package _global_
+# 汎用特徴量処理パイプライン設定
+
+pipeline:
+  steps:
+    # 1. 任意カラムドロップ（テスト用）
+    - name: "custom_drop"
+      module: "src.mlops.features.universal_transformers"
+      class: "CustomColumnDropper"
+      params:
+        columns_to_drop: []  # 必要に応じて削除したいカラムを指定
+      columns: "all"
+
+    # 2. 予測に寄与しなさそうなカラム自動削除
+    - name: "auto_drop"
+      module: "src.mlops.features.universal_transformers"
+      class: "LowContributionDropper"
+      params:
+        variance_threshold: 0.01
+        correlation_threshold: 0.95
+        missing_threshold: 0.5
+        constant_threshold: 0.95
+      columns: "all"
+
+    # 3. 統計的特徴量選択
+    - name: "smart_selection"
+      module: "src.mlops.features.universal_transformers"
+      class: "SmartFeatureSelector"
+      params:
+        k: 10
+        score_func: null  # 自動判定
+      columns: "all"
+
+    # 4. スケーリング
+    - name: "scaler"
+      module: "sklearn.preprocessing"
+      class: "StandardScaler"
+      params: {}
+      columns: "all"
