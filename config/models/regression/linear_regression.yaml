@@ -1,0 +1,8 @@
+# @package _global_
+# 線形回帰モデル設定
+model:
+  name: "linear_regression"
+  module: "sklearn.linear_model"
+  class: "LinearRegression"
+  default_params: {}
+  optuna_space: {}  # 線形回帰はハイパーパラメータなし

@@ -1,0 +1,25 @@
+# @package _global_
+# LightGBM分類モデル設定
+model:
+  name: "lightgbm"
+  module: "lightgbm"
+  class: "LGBMClassifier"
+  default_params:
+    n_estimators: 50
+    learning_rate: 0.1
+    max_depth: 3
+    num_leaves: 7
+    min_child_samples: 10
+    subsample: 0.8
+    colsample_bytree: 0.8
+    reg_alpha: 0.0
+    reg_lambda: 0.0
+    verbosity: -1
+    force_col_wise: true
+    # random_stateはrun.pyで動的に設定される
+  optuna_space:
+    n_estimators: ["int", 20, 80]
+    learning_rate: ["float", 0.05, 0.2]
+    max_depth: ["int", 2, 5]
+    num_leaves: ["int", 5, 15]
+    min_child_samples: ["int", 5, 20]

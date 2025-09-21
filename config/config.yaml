@@ -1,0 +1,123 @@
+# MLOps Configuration
+
+# 共通変数定義
+globals:
+  random_state: 42
+
+defaults:
+  - _self_
+  - models/classification: lightgbm
+  - pipelines: universal_features
+  - override hydra/job_logging: none
+
+# データ設定
+data:
+  file_path: "_data/raw/wine_classification.csv"  # CSVファイルパス
+  target_column: "target"  # ターゲット列名
+  # pandas.read_csv()の引数
+  read_csv_args:
+    sep: ","
+    encoding: "utf-8"
+    index_col: null
+  test_size: 0.2
+  random_state: ${globals.random_state}
+
+# 評価設定
+evaluation:
+  cv_strategy: "StratifiedKFold"  # KFold, StratifiedKFold, GroupKFold, TimeSeriesSplit
+  cv_folds: 5
+  cv_params:
+    shuffle: true
+    random_state: ${globals.random_state}
+
+# MLflow設定
+mlflow:
+  experiment_name: "config_driven_mlops"
+  # オプション: カスタムRun名（指定しない場合は自動生成）
+  run_id: "stratified_cv_test"
+  artifacts:
+    model_dir: "run_model"
+    visualization_dir: "visualizations"
+    model_filename: "pipeline_model.pkl"
+    info_filename: "pipeline_info.json"
+  # ファイル・レポート設定
+  reports:
+    classification_report: "classification_report.txt"
+    confusion_matrix: "confusion_matrix.txt"
+  # タグ設定
+  tags:
+    framework: "scikit-learn"
+    stage: "config-driven"
+
+# Optuna設定
+optuna:
+  enabled: false
+  n_trials: 5
+  direction: "maximize"  # maximize, minimize
+  study_name: "ml_optimization"
+  # チューニング指標設定
+  scoring:
+    classification: "f1_weighted"  # accuracy, f1_weighted, roc_auc, precision_weighted, recall_weighted
+    regression: "neg_mean_squared_error"  # neg_mean_squared_error, neg_root_mean_squared_error, neg_mean_absolute_error, r2
+
+# 可視化設定
+visualization:
+  enabled: true
+  plots:
+    # 基本的な分類可視化
+    - "classification_report"
+    - "confusion_matrix"
+    - "roc_curve"
+
+    # 精度・再現率関連
+    - "precision_recall_curve"
+
+    # モデル解釈
+    - "shap_summary"
+    - "permutation_importance"
+
+    # モデル選択・評価（一部モデルで互換性問題のため無効化）
+    # - "feature_importances"
+
+    # 追加可能な豊富なYellowBrick可視化（必要に応じてコメントアウト解除）
+    # 精度・再現率関連
+    # - "class_prediction_error"
+    # - "discrimination_threshold"  # 閾値可視化（二値分類のみ対応）
+    # - "threshold_plot"  # 閾値プロット
+
+    # モデル選択・評価
+    # - "learning_curve"
+    # - "validation_curve"
+
+    # クラス分析
+    - "class_balance"  # クラス分布・バランス可視化
+
+    # 回帰専用（回帰タスク時のみ利用可能）
+    # - "residuals_plot"
+    # - "prediction_error"
+    # - "cook_distance"
+    # - "alpha_selection"
+
+# Hydra設定
+hydra:
+  job:
+    chdir: false  # 作業ディレクトリを変更しない
+  output_subdir: null  # .hydraサブディレクトリを作成しない
+  run:
+    dir: .  # 現在のディレクトリを使用（outputs作成を回避）
+  verbose: false  # ログを簡潔に
+
+# 将来拡張予定項目（参考）
+# pipeline:
+#   steps:
+#     - name: "feature_engineering"
+#       type: "column_selector"
+#       params:
+#         columns: ["sepal length (cm)", "sepal width (cm)"]
+#     - name: "preprocessing"
+#       type: "standard_scaler"
+#       params: {}
+#     - name: "model"
+#       type: "random_forest"
+#       params:
+#         n_estimators: 100
