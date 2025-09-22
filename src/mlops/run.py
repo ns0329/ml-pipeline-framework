@@ -112,11 +112,14 @@ def main(cfg: DictConfig):
             scoring=scoring
         )
 
-        # メトリクス記録
-        log_experiment_metrics(best_pipeline, X_train, y_train, X_test, y_test, task_type, cv_scores)
+        # テストデータ予測（1回のみ実行）
+        y_pred = best_pipeline.predict(X_test)
 
-        # 予測結果DataFrame作成と保存
-        df_predictions = create_prediction_dataframe(best_pipeline, X_test, y_test, task_type)
+        # メトリクス記録（予測結果を渡して重複回避）
+        log_experiment_metrics(best_pipeline, X_train, y_train, X_test, y_test, task_type, cv_scores, y_pred=y_pred)
+
+        # 予測結果DataFrame作成と保存（予測結果を渡して重複回避）
+        df_predictions = create_prediction_dataframe(best_pipeline, X_test, y_test, task_type, y_pred=y_pred)
         save_prediction_results(df_predictions, cfg)
 
         # 可視化生成（config駆動）
