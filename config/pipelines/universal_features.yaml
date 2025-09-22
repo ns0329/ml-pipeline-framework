@@ -3,15 +3,15 @@
 
 pipeline:
   steps:
-    # 0. サンプリング（不均衡データ対策）- 最初に実行
+    # 0. サンプリング（不均衡データ対策）
     - name: "sampler"
-      module: "imblearn.over_sampling"  # 直接imblearnライブラリを指定
+      module: "imblearn.over_sampling"
       class: "SMOTE"  # SMOTE, RandomOverSampler, ADASYN等
       params:
         sampling_strategy: "auto"
         k_neighbors: 5
         random_state: ${globals.random_state}
-      enabled: false  # true でサンプリング有効化
+      enabled: true  # true でサンプリング有効化
       columns: "all"
 
     # 1. 任意カラムドロップ（テスト用）
@@ -22,16 +22,16 @@ pipeline:
         columns_to_drop: []  # 必要に応じて削除したいカラムを指定
       columns: "all"
 
-    # 2. 予測に寄与しなさそうなカラム自動削除
-    - name: "auto_drop"
-      module: "src.mlops.features.universal_transformers"
-      class: "LowContributionDropper"
-      params:
-        variance_threshold: 0.01
-        correlation_threshold: 0.95
-        missing_threshold: 0.5
-        constant_threshold: 0.95
-      columns: "all"
+    # # 2. 予測に寄与しなさそうなカラム自動削除
+    # - name: "auto_drop"
+    #   module: "src.mlops.features.universal_transformers"
+    #   class: "LowContributionDropper"
+    #   params:
+    #     variance_threshold: 0.01
+    #     correlation_threshold: 0.95
+    #     missing_threshold: 0.5
+    #     constant_threshold: 0.95
+    #   columns: "all"
 
     # 3. 統計的特徴量選択
     - name: "smart_selection"

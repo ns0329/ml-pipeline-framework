@@ -15,9 +15,9 @@ class OptunaOptimizer:
         self.task_type = task_type
 
     def objective(self, trial):
-        """Optuna最適化の目的関数"""
+        """Optuna最適化の目的関数（業界標準：パラメータ探索のみ、学習なし）"""
         try:
-            # パイプライン構築（試行用）
+            # パイプライン構築（パラメータ探索用、学習は行わない）
             pipeline = create_pipeline(self.cfg, trial=trial)
 
             # タスクタイプ別評価
