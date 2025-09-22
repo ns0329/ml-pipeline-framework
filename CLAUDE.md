@@ -37,35 +37,68 @@
 - **VSCodeでルートパス基準のimport設定を使用**
 - 相対パスやsys.path.append()は使用せず、VSCodeのワークスペース設定に依存
 
-### Git開発フロー（Git Flow）
+### Git開発フロー（Git Flow拡張版）
 - **ブランチ戦略**:
   - `main`: 本番環境用の安定版ブランチ
   - `develop`: 開発統合ブランチ（日常的な開発はここから分岐）
   - `feature/機能名`: 機能開発用ブランチ
+  - `bugfix/バグ名`: 開発中のバグ修正用ブランチ（develop起点）
+  - `hotfix/緊急修正名`: 本番の緊急バグ修正用ブランチ（main起点）
+
+- **ブランチ命名規則**:
+  - `feature/機能概要`: 新機能・機能拡張 (例: feature/sampling, feature/cv-strategy)
+  - `bugfix/バグ概要`: 開発版のバグ修正 (例: bugfix/readme-corruption, bugfix/import-error)
+  - `hotfix/緊急修正概要`: 本番緊急修正 (例: hotfix/critical-crash, hotfix/security-fix)
 
 - **開発手順**:
-  1. **機能開発開始**: `develop` → `feature/機能名` ブランチを作成
-  2. **開発作業**: `feature/機能名` ブランチで実装
-  3. **開発完了**: `feature/機能名` → `develop` へマージ
-  4. **リリース準備**: `develop` → `main` へマージ
 
-- **コマンド例**:
+  **1. 機能開発 (feature)**:
   ```bash
-  # 機能開発開始
   git checkout develop
   git pull origin develop
   git checkout -b feature/新機能名
-
-  # 開発完了後
-  git add .
-  git commit -m "feat: 新機能の実装"
+  # 開発後
   git checkout develop
   git merge feature/新機能名
   git push origin develop
-
-  # feature ブランチ削除
   git branch -d feature/新機能名
   ```
+
+  **2. バグ修正 (bugfix)**:
+  ```bash
+  git checkout develop
+  git pull origin develop
+  git checkout -b bugfix/バグ名
+  # 修正後
+  git checkout develop
+  git merge bugfix/バグ名
+  git push origin develop
+  git branch -d bugfix/バグ名
+  ```
+
+  **3. 緊急修正 (hotfix)**:
+  ```bash
+  git checkout main
+  git pull origin main
+  git checkout -b hotfix/緊急修正名
+  # 修正後
+  git checkout main
+  git merge hotfix/緊急修正名
+  git push origin main
+  # developにも反映
+  git checkout develop
+  git merge hotfix/緊急修正名
+  git push origin develop
+  git branch -d hotfix/緊急修正名
+  ```
+
+- **コミットメッセージ規則**:
+  - `feat:` 新機能追加
+  - `fix:` バグ修正
+  - `hotfix:` 緊急修正
+  - `docs:` ドキュメント更新
+  - `refactor:` リファクタリング
+  - `test:` テスト追加・修正
 
 
 ### 開発手法・プロセス
