@@ -103,8 +103,8 @@ def main(cfg: DictConfig):
             scoring = cfg.optuna.scoring.regression
 
         # CV戦略を作成
-        cv_strategy = create_cv_strategy(cfg, X_train, y_train)
-        print(f"🔄 CV Strategy: {cfg.evaluation.cv_strategy} (n_splits={cfg.evaluation.cv_folds})")
+        cv_strategy = create_cv_strategy(cfg)
+        print(f"🔄 CV Strategy: {cfg.evaluation.cv_strategy['class']} (n_splits={cfg.evaluation.cv_strategy.params.n_splits})")
 
         cv_scores = cross_val_score(
             best_pipeline, X_train, y_train,

@@ -25,13 +25,15 @@ data:
 # サンプリング設定（削除: pipeline configに移行）
 # サンプリングはconfig/pipelines/*.yamlで設定してください
 
-# 評価設定
+# 評価設定（config駆動CV戦略）
 evaluation:
-  cv_strategy: "StratifiedKFold"  # KFold, StratifiedKFold, GroupKFold, TimeSeriesSplit
-  cv_folds: 5
-  cv_params:
-    shuffle: true
-    random_state: ${globals.random_state}
+  cv_strategy:
+    module: "sklearn.model_selection"
+    class: "StratifiedKFold"
+    params:
+      n_splits: 5
+      shuffle: true
+      random_state: ${globals.random_state}
 
 # MLflow設定
 mlflow:

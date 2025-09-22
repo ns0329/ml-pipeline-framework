@@ -27,7 +27,7 @@ class OptunaOptimizer:
                 scoring = self.cfg.optuna.scoring.regression
 
             # CV戦略を作成してクロスバリデーション実行
-            cv_strategy = create_cv_strategy(self.cfg, self.X_train, self.y_train)
+            cv_strategy = create_cv_strategy(self.cfg)
             cv_scores = cross_val_score(
                 pipeline, self.X_train, self.y_train,
                 cv=cv_strategy,
