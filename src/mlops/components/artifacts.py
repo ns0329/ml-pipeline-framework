@@ -125,7 +125,19 @@ def create_prediction_dataframe(pipeline, X_test, y_test, task_type, y_pred=None
         y_pred = pipeline.predict(X_test)
 
     # パイプライン変換後の特徴量を取得（最終ステップ前まで）
-    X_test_transformed = pipeline[:-1].transform(X_test)
+    try:
+        # ImbPipelineまたは通常のPipelineでのtransform処理
+        X_test_transformed = pipeline[:-1].transform(X_test)
+    except AttributeError:
+        # サンプラーが含まれる場合の手動変換
+        from src.mlops.components.pipeline import SAMPLING_CLASSES
+        X_current = X_test.copy()
+        for name, transformer in pipeline.steps[:-1]:
+            # サンプラーはtransformメソッドを持たないため、テスト時はスキップ
+            if any(cls in str(type(transformer)) for cls in SAMPLING_CLASSES):
+                continue
+            X_current = transformer.transform(X_current)
+        X_test_transformed = X_current
 
     # 変換後データをDataFrameに変換
     if isinstance(X_test_transformed, pd.DataFrame):

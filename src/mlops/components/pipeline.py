@@ -13,6 +13,15 @@ except ImportError:
     ImbPipeline = Pipeline
     IMBLEARN_AVAILABLE = False
 
+# サンプリング関連の定義
+SAMPLING_MODULES = ['imblearn.over_sampling', 'imblearn.under_sampling', 'imblearn.combine']
+SAMPLING_CLASSES = ['SMOTE', 'RandomOverSampler', 'ADASYN', 'RandomUnderSampler', 'EditedNearestNeighbours', 'BorderlineSMOTE']
+
+def _is_sampler_step(step_config):
+    """ステップがサンプラーかどうかを判定"""
+    return (step_config.module in SAMPLING_MODULES or
+            step_config.get('class', '') in SAMPLING_CLASSES)
+
 
 def generate_optuna_params(trial, optuna_space):
     """Optuna用パラメータを動的生成"""
@@ -61,17 +70,18 @@ def create_pipeline(cfg: DictConfig, trial=None, best_params=None):
 
     # Pipeline Config方式のみサポート
     for step_config in cfg.pipeline.steps:
+        step_name = step_config.name
+
+        # サンプラー検出（enabled判定前に実行）
+        if _is_sampler_step(step_config) and getattr(step_config, 'enabled', True):
+            has_sampler = True
+
         # enabled フラグがFalseの場合はスキップ
         if hasattr(step_config, 'enabled') and not step_config.enabled:
             continue
 
-        step_name = step_config.name
         pipeline_step = create_pipeline_step(step_config)
         steps.append((step_name, pipeline_step))
-
-        # サンプラーがあるかチェック
-        if 'sampling' in step_config.module or 'Sampler' in step_config.get('class', ''):
-            has_sampler = True
 
     # モデル設定を直接取得
     model_class = import_class(cfg.model.module, cfg.model["class"])

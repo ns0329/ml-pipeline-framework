@@ -2,19 +2,29 @@
 # 汎用特徴量処理パイプライン設定
 
 pipeline:
+
   steps:
-    # 0. サンプリング（不均衡データ対策）
-    - name: "sampler"
-      module: "imblearn.over_sampling"
-      class: "SMOTE"  # SMOTE, RandomOverSampler, ADASYN等
+    # データ品質検証・修復
+    - name: "data_validator"
+      module: "src.mlops.features.data_validator"
+      class: "DataQualityValidator"
       params:
-        sampling_strategy: "auto"
-        k_neighbors: 5
-        random_state: ${globals.random_state}
-      enabled: true  # true でサンプリング有効化
+        fix_dtypes: true
+        drop_high_missing: 0.5  # 50%以上欠損列を削除
+        drop_zero_variance: true
       columns: "all"
 
-    # 1. 任意カラムドロップ（テスト用）
+    # データ型最適化（モデル種別対応）
+    - name: "dtype_optimizer"
+      module: "src.mlops.features.dtype_optimizer"
+      class: "DtypeOptimizer"
+      params:
+        model_name: "${model.name}"  # config参照
+        force_dtype: null  # null=自動, "float32"/"float64"で強制指定
+      columns: "all"
+
+
+    # 任意カラムドロップ
     - name: "custom_drop"
       module: "src.mlops.features.universal_transformers"
       class: "CustomColumnDropper"
@@ -22,18 +32,18 @@ pipeline:
         columns_to_drop: []  # 必要に応じて削除したいカラムを指定
       columns: "all"
 
-    # # 2. 予測に寄与しなさそうなカラム自動削除
-    # - name: "auto_drop"
-    #   module: "src.mlops.features.universal_transformers"
-    #   class: "LowContributionDropper"
-    #   params:
-    #     variance_threshold: 0.01
-    #     correlation_threshold: 0.95
-    #     missing_threshold: 0.5
-    #     constant_threshold: 0.95
-    #   columns: "all"
+    # 予測に寄与しなさそうなカラム自動削除
+    - name: "auto_drop"
+      module: "src.mlops.features.universal_transformers"
+      class: "LowContributionDropper"
+      params:
+        variance_threshold: 0.01
+        correlation_threshold: 0.95
+        missing_threshold: 0.5
+        constant_threshold: 0.95
+      columns: "all"
 
-    # 3. 統計的特徴量選択
+    # 統計的特徴量選択
     - name: "smart_selection"
       module: "src.mlops.features.universal_transformers"
       class: "SmartFeatureSelector"
@@ -42,9 +52,20 @@ pipeline:
         score_func: null  # 自動判定
       columns: "all"
 
-    # 4. スケーリング
+    # スケーリング
     - name: "scaler"
       module: "sklearn.preprocessing"
       class: "StandardScaler"
       params: {}
+      columns: "all"
+
+    # サンプリング（不均衡データ対策）
+    - name: "sampler"
+      module: "imblearn.over_sampling"
+      class: "SMOTE"  # SMOTE, RandomOverSampler, ADASYN等
+      params:
+        sampling_strategy: "auto"
+        k_neighbors: 5
+        random_state: ${globals.random_state}
+      enabled: true  # true でサンプリング有効化
       columns: "all"
