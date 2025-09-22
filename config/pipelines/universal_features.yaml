@@ -43,14 +43,14 @@ pipeline:
         constant_threshold: 0.98  # より厳しい基準
       columns: "all"
 
-    # 統計的特徴量選択 (テスト用に無効化)
-    # - name: "smart_selection"
-    #   module: "src.mlops.features.universal_transformers"
-    #   class: "SmartFeatureSelector"
-    #   params:
-    #     k: 10
-    #     score_func: null  # 自動判定
-    #   columns: "all"
+    # 統計的特徴量選択
+    - name: "smart_selection"
+      module: "src.mlops.features.universal_transformers"
+      class: "SmartFeatureSelector"
+      params:
+        k: 10
+        score_func: null  # 自動判定
+      columns: "all"
 
     # スケーリング
     - name: "scaler"

@@ -23,3 +23,9 @@ class DtypeOptimizer(BaseEstimator, TransformerMixin):
     def transform(self, X):
         print(f"🔄 データ型最適化: {self._dtype}")
         return X.astype(self._dtype)
+
+    def get_feature_names_out(self, input_features=None):
+        """変換後の特徴量名を返す（データ型変更のみなので特徴量名は変更されない）"""
+        if input_features is None:
+            raise ValueError("input_features must be provided")
+        return np.array(input_features)

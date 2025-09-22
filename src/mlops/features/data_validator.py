@@ -45,3 +45,12 @@ class DataQualityValidator(BaseEstimator, TransformerMixin):
             X_clean = X_clean.infer_objects()
 
         return X_clean
+
+    def get_feature_names_out(self, input_features=None):
+        """変換後の特徴量名を返す（削除されたカラムを除く）"""
+        if input_features is None:
+            raise ValueError("input_features must be provided")
+
+        # 削除対象カラムを除いた特徴量名を返す
+        remaining_features = [f for f in input_features if f not in self._cols_to_drop]
+        return np.array(remaining_features)

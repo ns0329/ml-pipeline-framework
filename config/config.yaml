@@ -12,7 +12,7 @@ defaults:
 
 # データ設定
 data:
-  file_path: "_data/raw/wine_classification.csv"  # CSVファイルパス
+  file_path: "_data/raw/binary_classification_test.csv"  # CSVファイルパス
   target_column: "target"  # ターゲット列名
   # pandas.read_csv()の引数
   read_csv_args:
@@ -70,28 +70,25 @@ visualization:
     - "classification_report"
     - "confusion_matrix"
     - "roc_curve"
-
-    # 精度・再現率関連
     - "precision_recall_curve"
 
     # モデル解釈
     - "shap_summary"
     - "permutation_importance"
+    # - "feature_importances"　# 一部モデルで互換性問題のため無効化
 
-    # モデル選択・評価（一部モデルで互換性問題のため無効化）
-    # - "feature_importances"
-
-    # 追加可能な豊富なYellowBrick可視化（必要に応じてコメントアウト解除）
+    # 追加可能な豊富なYellowBrick可視化
     # 精度・再現率関連
     - "class_prediction_error"
-    - "discrimination_threshold"  # 閾値可視化（二値分類のみ対応）
 
     # モデル選択・評価
     - "learning_curve"
-    - "validation_curve"
+    
+    # 二値分類（閾値可視化）
+    - "discrimination_threshold"  
 
     # クラス分析
-    - "class_balance"  # クラス分布・バランス可視化
+    - "class_balance"
 
     # 回帰専用（回帰タスク時のみ利用可能）
     # - "residuals_plot"
