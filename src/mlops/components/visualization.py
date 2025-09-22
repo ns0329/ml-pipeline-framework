@@ -2,6 +2,7 @@
 import tempfile
 import os
 import logging
+import japanize_matplotlib
 from abc import ABC, abstractmethod
 from typing import Dict, List, Any, Optional
 
@@ -87,6 +88,18 @@ class YellowBrickVisualizer(BaseVisualizer):
 
     def create_plot(self, output_path: str) -> None:
         """YellowBrick可視化を作成"""
+        # YellowBrick状態リセット
+        plt.rcdefaults()
+        plt.clf()
+        plt.close('all')
+
+        # matplotlib内部状態をクリア
+        import matplotlib
+        matplotlib.rcParams.clear()
+        matplotlib.rcParams.update(matplotlib.rcParamsDefault)
+        matplotlib.rcParams['font.family'] = 'DejaVu Sans'
+        matplotlib.rcParams['font.sans-serif'] = ['DejaVu Sans', 'Ubuntu']
+
         # ValidationCurve専用処理
         if self.viz_class.__name__ == "ValidationCurve":
             # モデル種別に応じたパラメータを設定
@@ -115,6 +128,12 @@ class YellowBrickVisualizer(BaseVisualizer):
         viz.score(self.X_test_transformed, self.y_test)
         viz.show(output_path)
 
+        # YellowBrick後の完全クリーンアップ
+        plt.rcdefaults()
+        plt.clf()
+        plt.close('all')
+        viz.finalize()
+
 
 class ClassBalanceVisualizer(BaseVisualizer):
     """ClassBalance専用可視化（特殊な処理が必要）"""
@@ -122,10 +141,28 @@ class ClassBalanceVisualizer(BaseVisualizer):
     def create_plot(self, output_path: str) -> None:
         from yellowbrick.target import ClassBalance
 
+        # YellowBrick状態リセット
+        plt.rcdefaults()
+        plt.clf()
+        plt.close('all')
+
+        # matplotlib内部状態をクリア
+        import matplotlib
+        matplotlib.rcParams.clear()
+        matplotlib.rcParams.update(matplotlib.rcParamsDefault)
+        matplotlib.rcParams['font.family'] = 'DejaVu Sans'
+        matplotlib.rcParams['font.sans-serif'] = ['DejaVu Sans', 'Ubuntu']
+
         viz = ClassBalance()
         # ClassBalanceは特殊で、ターゲットのみを使用
         viz.fit(self.y_train)
         viz.show(output_path)
+
+        # YellowBrick後の完全クリーンアップ
+        plt.rcdefaults()
+        plt.clf()
+        plt.close('all')
+        viz.finalize()
 
 
 # ============================================================================
@@ -137,6 +174,10 @@ class PermutationImportanceVisualizer(BaseVisualizer):
 
     def create_plot(self, output_path: str) -> None:
         from sklearn.inspection import permutation_importance
+
+        # 可視化前にmatplotlibをクリア
+        plt.clf()
+        plt.close('all')
 
         scoring = 'accuracy' if self.task_type == "classification" else 'neg_mean_squared_error'
         perm_importance = permutation_importance(
@@ -153,6 +194,10 @@ class PermutationImportanceVisualizer(BaseVisualizer):
         plt.tight_layout()
         plt.savefig(output_path, dpi=150, bbox_inches='tight')
         plt.close()
+
+        # 可視化後にも念のためクリア
+        plt.clf()
+        plt.close('all')
 
 
 class SHAPBaseVisualizer(BaseVisualizer):
@@ -179,6 +224,11 @@ class SHAPSummaryVisualizer(SHAPBaseVisualizer):
 
     def create_plot(self, output_path: str) -> None:
         import shap
+
+        # 可視化前にmatplotlibをクリア
+        plt.clf()
+        plt.close('all')
+
         shap_values, X_sample = self._get_shap_values()
 
         plt.figure(figsize=(10, 8))
@@ -198,12 +248,21 @@ class SHAPSummaryVisualizer(SHAPBaseVisualizer):
         plt.savefig(output_path, dpi=150, bbox_inches='tight')
         plt.close()
 
+        # 可視化後にも念のためクリア
+        plt.clf()
+        plt.close('all')
+
 
 class SHAPDependenceVisualizer(SHAPBaseVisualizer):
     """SHAP Dependence Plot可視化"""
 
     def create_plot(self, output_path: str) -> None:
         import shap
+
+        # 可視化前にmatplotlibをクリア
+        plt.clf()
+        plt.close('all')
+
         shap_values, X_sample = self._get_shap_values()
 
         if not hasattr(shap_values, 'values'):
@@ -226,6 +285,10 @@ class SHAPDependenceVisualizer(SHAPBaseVisualizer):
         plt.tight_layout()
         plt.savefig(output_path, dpi=150, bbox_inches='tight')
         plt.close()
+
+        # 可視化後にも念のためクリア
+        plt.clf()
+        plt.close('all')
 
 
 # ============================================================================
@@ -319,6 +382,17 @@ def _import_class(class_path: str):
 def create_visualizations(pipeline, X_train, y_train, X_test, y_test, target_names_str, plot_types, cfg, task_type):
     """可視化を設定駆動で作成（リファクタリング版）"""
 
+    # YellowBrick状態リセットのためにmatplotlib完全初期化
+    plt.rcdefaults()
+    plt.clf()
+    plt.close('all')
+    import matplotlib
+    matplotlib.rcParams.clear()
+    matplotlib.rcParams.update(matplotlib.rcParamsDefault)
+    # フォント警告抑制とフォント設定を再設定
+    matplotlib.rcParams['font.family'] = 'DejaVu Sans'
+    matplotlib.rcParams['font.sans-serif'] = ['DejaVu Sans', 'Ubuntu']
+
     with tempfile.TemporaryDirectory() as viz_dir:
         for plot_type in plot_types:
             try:
@@ -331,6 +405,9 @@ def create_visualizations(pipeline, X_train, y_train, X_test, y_test, target_nam
 
             except Exception as e:
                 print(f"⚠️ 可視化エラー {plot_type}: {e}")
+                # エラー時のクリーンアップ
+                plt.clf()
+                plt.close('all')
 
         # MLflowに保存
         for file in os.listdir(viz_dir):

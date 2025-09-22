@@ -16,3 +16,7 @@ mlruns
 docs
 scripts
 data/*
+
+# _data directory: keep structure but ignore contents
+_data/*
+!_data/.gitkeep
