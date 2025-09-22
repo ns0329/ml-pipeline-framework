@@ -22,9 +22,6 @@ data:
   test_size: 0.2
   random_state: ${globals.random_state}
 
-# サンプリング設定（削除: pipeline configに移行）
-# サンプリングはconfig/pipelines/*.yamlで設定してください
-
 # 評価設定（config駆動CV戦略）
 evaluation:
   cv_strategy:
@@ -56,7 +53,7 @@ mlflow:
 
 # Optuna設定
 optuna:
-  enabled: false
+  enabled: true
   n_trials: 5
   direction: "maximize"  # maximize, minimize
   study_name: "ml_optimization"
@@ -86,13 +83,12 @@ visualization:
 
     # 追加可能な豊富なYellowBrick可視化（必要に応じてコメントアウト解除）
     # 精度・再現率関連
-    # - "class_prediction_error"
-    # - "discrimination_threshold"  # 閾値可視化（二値分類のみ対応）
-    # - "threshold_plot"  # 閾値プロット
+    - "class_prediction_error"
+    - "discrimination_threshold"  # 閾値可視化（二値分類のみ対応）
 
     # モデル選択・評価
-    # - "learning_curve"
-    # - "validation_curve"
+    - "learning_curve"
+    - "validation_curve"
 
     # クラス分析
     - "class_balance"  # クラス分布・バランス可視化

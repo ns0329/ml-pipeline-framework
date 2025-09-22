@@ -54,7 +54,7 @@ def create_pipeline_step(step_config):
     return transformer
 
 
-def create_pipeline(cfg: DictConfig, trial=None):
+def create_pipeline(cfg: DictConfig, trial=None, best_params=None):
     """設定に基づいてPipelineを構築（Pipeline Config駆動）"""
     steps = []
     has_sampler = False
@@ -79,8 +79,13 @@ def create_pipeline(cfg: DictConfig, trial=None):
 
     if trial:  # Optuna最適化時
         params = generate_optuna_params(trial, optuna_space)
+        print(f"    [pipeline] trial mode: params={params}")
+    elif best_params:  # Optuna最適化結果適用時
+        params = {**best_params}
+        print(f"    [pipeline] best_params mode: params={params}")
     else:  # 通常実行時
         params = {**cfg.model.default_params}
+        print(f"    [pipeline] default mode: params={params}")
 
     # random_stateパラメータが対応している場合のみ追加
     if "random_state" in inspect.signature(model_class.__init__).parameters:
