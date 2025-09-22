@@ -143,9 +143,20 @@ def create_prediction_dataframe(pipeline, X_test, y_test, task_type, y_pred=None
     if isinstance(X_test_transformed, pd.DataFrame):
         df_transformed = X_test_transformed.copy()
     else:
-        # numpy arrayの場合
+        # numpy arrayの場合（パイプライン変換後の正しい特徴量名を使用）
+        from src.utils.pipeline_utils import get_pipeline_feature_names
+        original_feature_names = (X_test.columns.tolist()
+                                if hasattr(X_test, 'columns')
+                                else [f"feature_{i}" for i in range(X_test.shape[1])])
+        transformed_feature_names = get_pipeline_feature_names(pipeline, original_feature_names)
+
         n_features = X_test_transformed.shape[1]
-        feature_names = [f"feature_{i}" for i in range(n_features)]
+        # 変換後の特徴量数に合わせて調整
+        if len(transformed_feature_names) >= n_features:
+            feature_names = transformed_feature_names[:n_features]
+        else:
+            feature_names = transformed_feature_names + [f"generated_feature_{i}" for i in range(len(transformed_feature_names), n_features)]
+
         df_transformed = pd.DataFrame(X_test_transformed, columns=feature_names, index=X_test.index)
 
     # 元のテストデータとマージ（重複カラムはパイプライン側を優先）

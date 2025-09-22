@@ -29,7 +29,7 @@ pipeline:
       module: "src.mlops.features.universal_transformers"
       class: "CustomColumnDropper"
       params:
-        columns_to_drop: []  # 必要に応じて削除したいカラムを指定
+        columns_to_drop: ["feature_5", "feature_10", "feature_15"]  # テスト用：異なるカラムを削除
       columns: "all"
 
     # 予測に寄与しなさそうなカラム自動削除
@@ -37,20 +37,20 @@ pipeline:
       module: "src.mlops.features.universal_transformers"
       class: "LowContributionDropper"
       params:
-        variance_threshold: 0.01
-        correlation_threshold: 0.95
-        missing_threshold: 0.5
-        constant_threshold: 0.95
+        variance_threshold: 0.005  # より緩い基準
+        correlation_threshold: 0.98  # より厳しい基準
+        missing_threshold: 0.3  # より厳しい基準
+        constant_threshold: 0.98  # より厳しい基準
       columns: "all"
 
-    # 統計的特徴量選択
-    - name: "smart_selection"
-      module: "src.mlops.features.universal_transformers"
-      class: "SmartFeatureSelector"
-      params:
-        k: 10
-        score_func: null  # 自動判定
-      columns: "all"
+    # 統計的特徴量選択 (テスト用に無効化)
+    # - name: "smart_selection"
+    #   module: "src.mlops.features.universal_transformers"
+    #   class: "SmartFeatureSelector"
+    #   params:
+    #     k: 10
+    #     score_func: null  # 自動判定
+    #   columns: "all"
 
     # スケーリング
     - name: "scaler"
@@ -62,10 +62,9 @@ pipeline:
     # サンプリング（不均衡データ対策）
     - name: "sampler"
       module: "imblearn.over_sampling"
-      class: "SMOTE"  # SMOTE, RandomOverSampler, ADASYN等
+      class: "RandomOverSampler"  # SMOTEからRandomOverSamplerに変更
       params:
         sampling_strategy: "auto"
-        k_neighbors: 5
         random_state: ${globals.random_state}
       enabled: true  # true でサンプリング有効化
       columns: "all"
