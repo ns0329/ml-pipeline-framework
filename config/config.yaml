@@ -28,7 +28,7 @@ evaluation:
     module: "sklearn.model_selection"
     class: "StratifiedKFold"
     params:
-      n_splits: 5
+      n_splits: 3
       shuffle: true
       random_state: ${globals.random_state}
 
@@ -54,7 +54,7 @@ mlflow:
 # Optuna設定
 optuna:
   enabled: true
-  n_trials: 5
+  n_trials: 2
   direction: "maximize"  # maximize, minimize
   study_name: "ml_optimization"
   # チューニング指標設定
