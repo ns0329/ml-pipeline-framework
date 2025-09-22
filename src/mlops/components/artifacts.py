@@ -55,7 +55,7 @@ def log_runtime_parameters(pipeline, cfg, best_params=None):
                 mlflow.log_param(f"tuned_{key}", str(value))
 
 
-def log_experiment_metrics(best_pipeline, X_train, y_train, X_test, y_test, task_type, cv_scores):
+def log_experiment_metrics(best_pipeline, X_train, y_train, X_test, y_test, task_type, cv_scores, y_pred=None):
     """実験メトリクスをMLflowに記録"""
     import numpy as np
     from sklearn.metrics import (
@@ -67,8 +67,9 @@ def log_experiment_metrics(best_pipeline, X_train, y_train, X_test, y_test, task
     mlflow.log_metric("cv_mean", cv_scores.mean())
     mlflow.log_metric("cv_std", cv_scores.std())
 
-    # Test評価
-    y_pred = best_pipeline.predict(X_test)
+    # Test評価（予測結果が渡されない場合のみ実行）
+    if y_pred is None:
+        y_pred = best_pipeline.predict(X_test)
 
     if task_type == "classification":
         # 分類評価指標
@@ -114,13 +115,14 @@ def log_experiment_metrics(best_pipeline, X_train, y_train, X_test, y_test, task
         print(f"🚀 {mlflow.active_run().info.run_id[:8]} | 📈 CV: {cv_scores.mean():.3f}±{cv_scores.std():.3f} Test RMSE: {test_rmse:.3f} R²: {test_r2:.3f}")
 
 
-def create_prediction_dataframe(pipeline, X_test, y_test, task_type):
+def create_prediction_dataframe(pipeline, X_test, y_test, task_type, y_pred=None):
     """予測結果と変換済み特徴量を統合したDataFrameを作成"""
     import pandas as pd
     import numpy as np
 
-    # 予測値と予測確率を取得
-    y_pred = pipeline.predict(X_test)
+    # 予測値と予測確率を取得（予測結果が渡されない場合のみ実行）
+    if y_pred is None:
+        y_pred = pipeline.predict(X_test)
 
     # パイプライン変換後の特徴量を取得（最終ステップ前まで）
     X_test_transformed = pipeline[:-1].transform(X_test)
