@@ -137,8 +137,10 @@ def main(cfg: DictConfig):
                 target_names_str, cfg.visualization.plots, cfg, task_type
             )
 
-        # モデル・アーティファクト保存
-        save_model_artifacts(best_pipeline, feature_cols, target_names, cfg)
+        # モデル・アーティファクト保存（パイプライン変換後の特徴量名を使用）
+        from src.utils.pipeline_utils import get_pipeline_feature_names
+        transformed_feature_names = get_pipeline_feature_names(best_pipeline, feature_cols)
+        save_model_artifacts(best_pipeline, transformed_feature_names, target_names, cfg)
 
         print("✅ MLOpsフロー完了")
 

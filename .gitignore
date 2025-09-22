@@ -14,8 +14,11 @@ mlruns
 
 # ignore
 docs
-scripts
 data/*
+
+# scripts directory: keep structure but ignore contents
+scripts/*
+!scripts/.gitkeep
 
 # _data directory: keep structure but ignore contents
 _data/*

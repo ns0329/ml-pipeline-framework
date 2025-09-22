@@ -62,10 +62,12 @@ class BaseVisualizer(ABC):
                 X_current = transformer.transform(X_current)
             self.X_test_transformed = X_current
 
-        # 特徴量名
-        self.feature_names = (X_train.columns.tolist()
-                            if hasattr(X_train, 'columns')
-                            else [f'feature_{i}' for i in range(X_train.shape[1])])
+        # 特徴量名（パイプライン変換後の正しい特徴量名を取得）
+        from src.utils.pipeline_utils import get_pipeline_feature_names
+        original_feature_names = (X_train.columns.tolist()
+                                if hasattr(X_train, 'columns')
+                                else [f'feature_{i}' for i in range(X_train.shape[1])])
+        self.feature_names = get_pipeline_feature_names(self.pipeline, original_feature_names)
 
     @abstractmethod
     def create_plot(self, output_path: str) -> None:
@@ -174,30 +176,36 @@ class PermutationImportanceVisualizer(BaseVisualizer):
 
     def create_plot(self, output_path: str) -> None:
         from sklearn.inspection import permutation_importance
+        from src.utils.pipeline_utils import get_transformed_data_with_feature_names
 
         # 可視化前にmatplotlibをクリア
         plt.clf()
         plt.close('all')
 
+        # パイプライン変換後のテストデータと特徴量名を取得
+        X_test_transformed, transformed_feature_names = get_transformed_data_with_feature_names(
+            self.pipeline, self.X_test, self.X_test.columns.tolist()
+        )
+
         scoring = 'accuracy' if self.task_type == "classification" else 'neg_mean_squared_error'
         perm_importance = permutation_importance(
-            self.pipeline, self.X_test, self.y_test,
+            self.pipeline[-1], X_test_transformed, self.y_test,  # 最終段階のモデルのみ使用
             scoring=scoring, n_repeats=5, random_state=42
         )
 
         plt.figure(figsize=(10, 8))
-        indices = np.argsort(perm_importance.importances_mean)[-15:]
+
+        # 上位特徴量を選択
+        max_features_to_show = min(15, len(perm_importance.importances_mean))
+        indices = np.argsort(perm_importance.importances_mean)[-max_features_to_show:]
+
         plt.barh(range(len(indices)), perm_importance.importances_mean[indices])
-        plt.yticks(range(len(indices)), [self.feature_names[i] for i in indices])
+        plt.yticks(range(len(indices)), [transformed_feature_names[i] for i in indices])
         plt.xlabel(f'Permutation Importance ({scoring})')
         plt.title(f'Permutation Feature Importance ({self.task_type.title()})')
         plt.tight_layout()
         plt.savefig(output_path, dpi=150, bbox_inches='tight')
         plt.close()
-
-        # 可視化後にも念のためクリア
-        plt.clf()
-        plt.close('all')
 
 
 class SHAPBaseVisualizer(BaseVisualizer):
