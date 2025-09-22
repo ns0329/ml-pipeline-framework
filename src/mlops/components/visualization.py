@@ -34,9 +34,32 @@ class BaseVisualizer(ABC):
         self.task_type = task_type
         self.model = pipeline.named_steps['classifier']
 
-        # データ変換
-        self.X_train_transformed = pipeline[:-1].transform(X_train)
-        self.X_test_transformed = pipeline[:-1].transform(X_test)
+        # データ変換（ImbPipeline対応）
+        try:
+            # ImbPipelineまたは通常のPipelineでのtransform処理
+            self.X_train_transformed = pipeline[:-1].transform(X_train)
+            self.X_test_transformed = pipeline[:-1].transform(X_test)
+        except AttributeError:
+            # サンプラーが含まれる場合の手動変換
+            from src.mlops.components.pipeline import SAMPLING_CLASSES
+
+            # X_train変換
+            X_current = X_train.copy()
+            for name, transformer in pipeline.steps[:-1]:
+                # サンプラーはtransformメソッドを持たないため、学習時はスキップ
+                if any(cls in str(type(transformer)) for cls in SAMPLING_CLASSES):
+                    continue
+                X_current = transformer.transform(X_current)
+            self.X_train_transformed = X_current
+
+            # X_test変換
+            X_current = X_test.copy()
+            for name, transformer in pipeline.steps[:-1]:
+                # サンプラーはtransformメソッドを持たないため、テスト時はスキップ
+                if any(cls in str(type(transformer)) for cls in SAMPLING_CLASSES):
+                    continue
+                X_current = transformer.transform(X_current)
+            self.X_test_transformed = X_current
 
         # 特徴量名
         self.feature_names = (X_train.columns.tolist()
@@ -64,7 +87,26 @@ class YellowBrickVisualizer(BaseVisualizer):
 
     def create_plot(self, output_path: str) -> None:
         """YellowBrick可視化を作成"""
-        if self.task_type == "classification" and self.target_names:
+        # ValidationCurve専用処理
+        if self.viz_class.__name__ == "ValidationCurve":
+            # モデル種別に応じたパラメータを設定
+            model_name = type(self.model).__name__
+            if "LightGBM" in model_name or "LGBM" in model_name:
+                param_name = "n_estimators"
+                param_range = [10, 25, 50, 75, 100]
+            elif "RandomForest" in model_name:
+                param_name = "n_estimators"
+                param_range = [10, 25, 50, 75, 100]
+            elif "SVC" in model_name:
+                param_name = "C"
+                param_range = [0.1, 1, 10, 100]
+            else:
+                # デフォルト（汎用パラメータ）
+                param_name = "n_estimators" if hasattr(self.model, "n_estimators") else "C"
+                param_range = [10, 25, 50, 75, 100] if param_name == "n_estimators" else [0.1, 1, 10, 100]
+
+            viz = self.viz_class(self.model, param_name=param_name, param_range=param_range)
+        elif self.task_type == "classification" and self.target_names:
             viz = self.viz_class(self.model, classes=self.target_names)
         else:
             viz = self.viz_class(self.model)
