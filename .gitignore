@@ -10,7 +10,6 @@ wheels/
 .env
 .venv
 .claude
-CLAUDE.md
 mlruns
 
 # ignore
