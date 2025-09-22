@@ -15,4 +15,4 @@ mlruns
 # ignore
 docs
 scripts
-data/raw/
+data/*
