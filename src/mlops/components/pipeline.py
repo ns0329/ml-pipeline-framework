@@ -5,6 +5,14 @@ from omegaconf import DictConfig
 import inspect
 from src.utils.import_utils import import_class, resolve_function_references
 
+# サンプリング対応のためImblearn Pipelineもインポート
+try:
+    from imblearn.pipeline import Pipeline as ImbPipeline
+    IMBLEARN_AVAILABLE = True
+except ImportError:
+    ImbPipeline = Pipeline
+    IMBLEARN_AVAILABLE = False
+
 
 def generate_optuna_params(trial, optuna_space):
     """Optuna用パラメータを動的生成"""
@@ -49,12 +57,21 @@ def create_pipeline_step(step_config):
 def create_pipeline(cfg: DictConfig, trial=None):
     """設定に基づいてPipelineを構築（Pipeline Config駆動）"""
     steps = []
+    has_sampler = False
 
     # Pipeline Config方式のみサポート
     for step_config in cfg.pipeline.steps:
+        # enabled フラグがFalseの場合はスキップ
+        if hasattr(step_config, 'enabled') and not step_config.enabled:
+            continue
+
         step_name = step_config.name
         pipeline_step = create_pipeline_step(step_config)
         steps.append((step_name, pipeline_step))
+
+        # サンプラーがあるかチェック
+        if 'sampling' in step_config.module or 'Sampler' in step_config.get('class', ''):
+            has_sampler = True
 
     # モデル設定を直接取得
     model_class = import_class(cfg.model.module, cfg.model["class"])
@@ -71,4 +88,8 @@ def create_pipeline(cfg: DictConfig, trial=None):
 
     steps.append(("classifier", model_class(**params)))
 
-    return Pipeline(steps)
+    # サンプラーがある場合はImbPipelineを使用
+    if has_sampler and IMBLEARN_AVAILABLE:
+        return ImbPipeline(steps)
+    else:
+        return Pipeline(steps)

@@ -1,0 +1,89 @@
+# サンプリング手法の設定例
+
+# オーバーサンプリング - 基本
+smote_auto:
+  name: "sampler"
+  module: "imblearn.over_sampling"
+  class: "SMOTE"
+  params:
+    sampling_strategy: "auto"  # 完全均等化
+    k_neighbors: 5
+    random_state: ${globals.random_state}
+
+# オーバーサンプリング - 数値指定
+smote_ratio:
+  name: "sampler"
+  module: "imblearn.over_sampling"
+  class: "SMOTE"
+  params:
+    sampling_strategy: 0.5  # 少数クラスを多数クラスの50%まで
+    k_neighbors: 5
+    random_state: ${globals.random_state}
+
+# オーバーサンプリング - 辞書指定
+smote_dict:
+  name: "sampler"
+  module: "imblearn.over_sampling"
+  class: "SMOTE"
+  params:
+    sampling_strategy: {0: 100, 1: 150}  # 各クラスの目標数
+    k_neighbors: 5
+    random_state: ${globals.random_state}
+
+random_over:
+  name: "sampler"
+  module: "imblearn.over_sampling"
+  class: "RandomOverSampler"
+  params:
+    sampling_strategy: "auto"
+    random_state: ${globals.random_state}
+
+adasyn:
+  name: "sampler"
+  module: "imblearn.over_sampling"
+  class: "ADASYN"
+  params:
+    sampling_strategy: "auto"
+    n_neighbors: 5
+    random_state: ${globals.random_state}
+
+# アンダーサンプリング
+random_under:
+  name: "sampler"
+  module: "imblearn.under_sampling"
+  class: "RandomUnderSampler"
+  params:
+    sampling_strategy: "auto"
+    random_state: ${globals.random_state}
+
+tomek:
+  name: "sampler"
+  module: "imblearn.under_sampling"
+  class: "TomekLinks"
+  params:
+    sampling_strategy: "auto"
+
+enn:
+  name: "sampler"
+  module: "imblearn.under_sampling"
+  class: "EditedNearestNeighbours"
+  params:
+    sampling_strategy: "auto"
+    n_neighbors: 3
+
+# コンビネーション
+smoteenn:
+  name: "sampler"
+  module: "imblearn.combine"
+  class: "SMOTEENN"
+  params:
+    sampling_strategy: "auto"
+    random_state: ${globals.random_state}
+
+smotetomek:
+  name: "sampler"
+  module: "imblearn.combine"
+  class: "SMOTETomek"
+  params:
+    sampling_strategy: "auto"
+    random_state: ${globals.random_state}

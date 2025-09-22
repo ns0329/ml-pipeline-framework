@@ -3,6 +3,17 @@
 
 pipeline:
   steps:
+    # 0. サンプリング（不均衡データ対策）- 最初に実行
+    - name: "sampler"
+      module: "imblearn.over_sampling"  # 直接imblearnライブラリを指定
+      class: "SMOTE"  # SMOTE, RandomOverSampler, ADASYN等
+      params:
+        sampling_strategy: "auto"
+        k_neighbors: 5
+        random_state: ${globals.random_state}
+      enabled: false  # true でサンプリング有効化
+      columns: "all"
+
     # 1. 任意カラムドロップ（テスト用）
     - name: "custom_drop"
       module: "src.mlops.features.universal_transformers"
