@@ -42,10 +42,6 @@ mlflow:
     visualization_dir: "visualizations"
     model_filename: "pipeline_model.pkl"
     info_filename: "pipeline_info.json"
-  # ファイル・レポート設定
-  reports:
-    classification_report: "classification_report.txt"
-    confusion_matrix: "confusion_matrix.txt"
   # タグ設定
   tags:
     framework: "scikit-learn"
