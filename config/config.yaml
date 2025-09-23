@@ -35,6 +35,8 @@ evaluation:
 # MLflow設定
 mlflow:
   experiment_name: "config_driven_mlops"
+  # オプション: 実験説明文
+  description: "LightGBM二値分類実験 - 動的メトリクス対応版"
   # オプション: カスタムRun名（指定しない場合は自動生成）
   run_id: "stratified_cv_test"
   artifacts:

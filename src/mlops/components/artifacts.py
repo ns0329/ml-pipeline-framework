@@ -241,7 +241,13 @@ def save_prediction_results(df_predictions, cfg):
 
 def setup_mlflow_experiment(cfg):
     """MLflow実験セットアップ"""
-    mlflow.set_experiment(cfg.mlflow.experiment_name)
+    # 実験作成時にdescriptionタグを設定
+    if hasattr(cfg.mlflow, 'description') and cfg.mlflow.description:
+        experiment = mlflow.set_experiment(cfg.mlflow.experiment_name)
+        # 実験レベルでdescriptionタグを設定
+        mlflow.set_experiment_tag("description", cfg.mlflow.description)
+    else:
+        mlflow.set_experiment(cfg.mlflow.experiment_name)
 
 
 def set_mlflow_tags(cfg):
