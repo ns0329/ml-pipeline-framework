@@ -15,6 +15,7 @@ from src.mlops.components.pipeline import create_pipeline
 from src.mlops.components.visualization import create_visualizations
 from src.mlops.components.optimization import OptunaOptimizer
 from src.mlops.components.artifacts import save_model_artifacts, log_experiment_metrics, setup_mlflow_experiment, set_mlflow_tags, log_config_parameters, log_runtime_parameters, create_prediction_dataframe, save_prediction_results
+from src.utils.pipeline_utils import get_pipeline_feature_names
 
 # matplotlib設定
 import os
@@ -101,29 +102,20 @@ def main(cfg: DictConfig):
         # テストデータ予測（1回のみ実行）
         y_pred = best_pipeline.predict(X_test)
 
-        # Optuna最適化時はCV評価済み、未実行時のみCV実行
+        # CV評価またはOptuna結果使用
+        scoring = cfg.optuna.scoring.classification if task_type == "classification" else cfg.optuna.scoring.regression
+        n_splits = cfg.evaluation.cv_strategy.params.n_splits
+
         if not cfg.optuna.enabled:
-            # クロスバリデーション評価（Optuna未使用時のみ）
-            if task_type == "classification":
-                scoring = cfg.optuna.scoring.classification
-            else:
-                scoring = cfg.optuna.scoring.regression
-
             cv_strategy = create_cv_strategy(cfg)
-            print(f"🔄 CV Strategy: {cfg.evaluation.cv_strategy['class']} (n_splits={cfg.evaluation.cv_strategy.params.n_splits})")
-
-            cv_scores = cross_val_score(
-                best_pipeline, X_train, y_train,
-                cv=cv_strategy,
-                scoring=scoring
-            )
+            print(f"🔄 CV Strategy: {cfg.evaluation.cv_strategy['class']} (n_splits={n_splits})")
+            cv_scores = cross_val_score(best_pipeline, X_train, y_train, cv=cv_strategy, scoring=scoring)
         else:
-            # Optuna使用時は最適化結果を使用
-            cv_scores = np.array([best_score] * 5)  # best_scoreを5foldに展開（numpy配列で互換性維持）
+            cv_scores = np.array([best_score] * n_splits)
             print(f"🔄 CV評価をスキップ（Optuna最適化済み: {best_score:.3f}）")
 
         # メトリクス記録
-        log_experiment_metrics(best_pipeline, X_train, y_train, X_test, y_test, task_type, cv_scores, y_pred=y_pred)
+        log_experiment_metrics(best_pipeline, X_train, y_train, X_test, y_test, task_type, cv_scores, cfg=cfg, y_pred=y_pred)
 
         # 予測結果DataFrame作成と保存
         df_predictions = create_prediction_dataframe(best_pipeline, X_test, y_test, task_type, y_pred=y_pred)
@@ -137,8 +129,7 @@ def main(cfg: DictConfig):
                 target_names_str, cfg.visualization.plots, cfg, task_type
             )
 
-        # モデル・アーティファクト保存（パイプライン変換後の特徴量名を使用）
-        from src.utils.pipeline_utils import get_pipeline_feature_names
+        # モデル・アーティファクト保存
         transformed_feature_names = get_pipeline_feature_names(best_pipeline, feature_cols)
         save_model_artifacts(best_pipeline, transformed_feature_names, target_names, cfg)
 

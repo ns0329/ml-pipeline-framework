@@ -59,7 +59,7 @@ optuna:
   study_name: "ml_optimization"
   # チューニング指標設定
   scoring:
-    classification: "f1_weighted"  # accuracy, f1_weighted, roc_auc, precision_weighted, recall_weighted
+    classification: "f1"  # accuracy, f1, f1_weighted, f1_macro, roc_auc, precision, recall (f1=f1_binary for binary classification)
     regression: "neg_mean_squared_error"  # neg_mean_squared_error, neg_root_mean_squared_error, neg_mean_absolute_error, r2
 
 # 可視化設定

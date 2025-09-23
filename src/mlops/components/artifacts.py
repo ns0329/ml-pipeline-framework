@@ -55,7 +55,7 @@ def log_runtime_parameters(pipeline, cfg, best_params=None):
                 mlflow.log_param(f"tuned_{key}", str(value))
 
 
-def log_experiment_metrics(best_pipeline, X_train, y_train, X_test, y_test, task_type, cv_scores, y_pred=None):
+def log_experiment_metrics(best_pipeline, X_train, y_train, X_test, y_test, task_type, cv_scores, cfg=None, y_pred=None):
     """実験メトリクスをMLflowに記録"""
     import numpy as np
     from sklearn.metrics import (
@@ -74,26 +74,55 @@ def log_experiment_metrics(best_pipeline, X_train, y_train, X_test, y_test, task
     if task_type == "classification":
         # 分類評価指標
         test_accuracy = accuracy_score(y_test, y_pred)
-        test_f1 = f1_score(y_test, y_pred, average='weighted')
         mlflow.log_metric("test_accuracy", test_accuracy)
-        mlflow.log_metric("test_f1_weighted", test_f1)
+
+        # config設定に基づくメトリクス計算
+        scoring_type = cfg.optuna.scoring.classification if cfg else "f1_weighted"
+        is_binary = len(np.unique(y_test)) == 2
+
+        # F1スコア計算（config設定に対応）
+        if scoring_type in ["f1", "f1_binary"] and is_binary:
+            # 二値分類: binaryモード（陽性クラスのF1）
+            test_f1 = f1_score(y_test, y_pred, pos_label=1)
+            metric_suffix = "binary"
+        elif scoring_type == "f1_macro":
+            test_f1 = f1_score(y_test, y_pred, average='macro')
+            metric_suffix = "macro"
+        else:  # f1_weighted or default
+            test_f1 = f1_score(y_test, y_pred, average='weighted')
+            metric_suffix = "weighted"
+
+        mlflow.log_metric(f"test_f1_{metric_suffix}", test_f1)
 
         # AUC（二値・多値分類対応）
         if hasattr(best_pipeline, 'predict_proba'):
             y_proba = best_pipeline.predict_proba(X_test)
-            if len(np.unique(y_test)) == 2:  # 二値分類
+            if is_binary:  # 二値分類
                 test_auc = roc_auc_score(y_test, y_proba[:, 1])
             else:  # 多値分類
                 test_auc = roc_auc_score(y_test, y_proba, multi_class='ovr', average='weighted')
             mlflow.log_metric("test_auc", test_auc)
 
-        # その他分類指標
-        test_precision = precision_score(y_test, y_pred, average='weighted')
-        test_recall = recall_score(y_test, y_pred, average='weighted')
-        mlflow.log_metric("test_precision_weighted", test_precision)
-        mlflow.log_metric("test_recall_weighted", test_recall)
+        # Precision/Recall（configと同じaverageを使用）
+        if scoring_type in ["f1", "f1_binary", "precision", "recall"] and is_binary:
+            test_precision = precision_score(y_test, y_pred, pos_label=1)
+            test_recall = recall_score(y_test, y_pred, pos_label=1)
+            mlflow.log_metric("test_precision_binary", test_precision)
+            mlflow.log_metric("test_recall_binary", test_recall)
+        elif "macro" in scoring_type:
+            test_precision = precision_score(y_test, y_pred, average='macro')
+            test_recall = recall_score(y_test, y_pred, average='macro')
+            mlflow.log_metric("test_precision_macro", test_precision)
+            mlflow.log_metric("test_recall_macro", test_recall)
+        else:
+            test_precision = precision_score(y_test, y_pred, average='weighted')
+            test_recall = recall_score(y_test, y_pred, average='weighted')
+            mlflow.log_metric("test_precision_weighted", test_precision)
+            mlflow.log_metric("test_recall_weighted", test_recall)
 
-        print(f"🚀 {mlflow.active_run().info.run_id[:8]} | 📈 CV: {cv_scores.mean():.3f}±{cv_scores.std():.3f} Test Acc: {test_accuracy:.3f} F1: {test_f1:.3f} AUC: {test_auc:.3f}")
+        # 表示用ラベル
+        f1_label = "F1" if metric_suffix == "binary" else f"F1_{metric_suffix[:3]}"
+        print(f"🚀 {mlflow.active_run().info.run_id[:8]} | 📈 CV: {cv_scores.mean():.3f}±{cv_scores.std():.3f} Test Acc: {test_accuracy:.3f} {f1_label}: {test_f1:.3f} AUC: {test_auc:.3f}")
 
     else:  # regression
         # 回帰評価指標
