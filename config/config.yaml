@@ -19,10 +19,23 @@ data:
     sep: ","
     encoding: "utf-8"
     index_col: null
-  test_size: 0.2
   random_state: ${globals.random_state}
 
-# 評価設定（config駆動CV戦略）
+# データ分割設定（train-test分割専用）
+split:
+  # train_test_split関数を使用（最も一般的な分割方法）
+  module: "sklearn.model_selection"
+  function: "train_test_split"
+  params:
+    test_size: 0.2
+    random_state: ${globals.random_state}
+    shuffle: true
+    # stratify: null  # 分類時は自動で設定される
+
+  # 注意: StratifiedShuffleSplit, GroupShuffleSplit, TimeSeriesSplitは
+  # CV用なのでevaluation.cv_strategyで使用してください
+
+# 評価設定
 evaluation:
   cv_strategy:
     module: "sklearn.model_selection"
@@ -75,7 +88,7 @@ visualization:
     - "permutation_importance"
     # - "feature_importances"　# 一部モデルで互換性問題のため無効化
 
-    # 追加可能な豊富なYellowBrick可視化
+    # YellowBrick可視化
     # 精度・再現率関連
     - "class_prediction_error"
 
@@ -102,18 +115,3 @@ hydra:
   run:
     dir: .  # 現在のディレクトリを使用（outputs作成を回避）
   verbose: false  # ログを簡潔に
-
-# 将来拡張予定項目（参考）
-# pipeline:
-#   steps:
-#     - name: "feature_engineering"
-#       type: "column_selector"
-#       params:
-#         columns: ["sepal length (cm)", "sepal width (cm)"]
-#     - name: "preprocessing"
-#       type: "standard_scaler"
-#       params: {}
-#     - name: "model"
-#       type: "random_forest"
-#       params:
-#         n_estimators: 100

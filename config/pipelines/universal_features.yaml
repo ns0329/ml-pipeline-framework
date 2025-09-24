@@ -6,7 +6,7 @@ pipeline:
   steps:
     # データ品質検証・修復
     - name: "data_validator"
-      module: "src.mlops.features.data_validator"
+      module: "src.mlops.features.preprocessing"
       class: "DataQualityValidator"
       params:
         fix_dtypes: true
@@ -16,7 +16,7 @@ pipeline:
 
     # データ型最適化（モデル種別対応）
     - name: "dtype_optimizer"
-      module: "src.mlops.features.dtype_optimizer"
+      module: "src.mlops.features.preprocessing"
       class: "DtypeOptimizer"
       params:
         model_name: "${model.name}"  # config参照
@@ -26,7 +26,7 @@ pipeline:
 
     # 任意カラムドロップ
     - name: "custom_drop"
-      module: "src.mlops.features.universal_transformers"
+      module: "src.mlops.features.selection"
       class: "CustomColumnDropper"
       params:
         columns_to_drop: ["feature_5", "feature_10", "feature_15"]  # テスト用：異なるカラムを削除
@@ -34,7 +34,7 @@ pipeline:
 
     # 予測に寄与しなさそうなカラム自動削除
     - name: "auto_drop"
-      module: "src.mlops.features.universal_transformers"
+      module: "src.mlops.features.selection"
       class: "LowContributionDropper"
       params:
         variance_threshold: 0.005  # より緩い基準
@@ -45,7 +45,7 @@ pipeline:
 
     # 統計的特徴量選択
     - name: "smart_selection"
-      module: "src.mlops.features.universal_transformers"
+      module: "src.mlops.features.selection"
       class: "SmartFeatureSelector"
       params:
         k: 10

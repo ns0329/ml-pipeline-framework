@@ -1,7 +1,7 @@
 """データ型最適化テスト"""
 import numpy as np
 import pandas as pd
-from src.mlops.features.dtype_optimizer import DtypeOptimizer
+from src.mlops.features.preprocessing import DtypeOptimizer
 
 # テストデータ
 X = pd.DataFrame({

@@ -3,7 +3,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
 from omegaconf import DictConfig
 import inspect
-from src.utils.import_utils import import_class, resolve_function_references
+from src.utils.core_utils import import_class, resolve_function_references
 
 # サンプリング対応のためImblearn Pipelineもインポート
 try:

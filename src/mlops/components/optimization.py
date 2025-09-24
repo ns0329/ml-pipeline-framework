@@ -2,7 +2,7 @@
 import optuna
 from sklearn.model_selection import cross_val_score
 from src.mlops.components.pipeline import create_pipeline
-from src.utils.cv_utils import create_cv_strategy
+from src.mlops.utils.cv_utils import create_cv_strategy
 
 
 class OptunaOptimizer:

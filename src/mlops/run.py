@@ -1,4 +1,4 @@
-"""MLOps実験実行スクリプト（リファクタリング版）"""
+"""MLOps実験実行スクリプト"""
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split, cross_val_score
@@ -7,15 +7,16 @@ import hydra
 from omegaconf import DictConfig
 
 # データ処理ユーティリティ
-from src.utils.data_utils import get_dataset_name, detect_task_type, load_csv_data
-from src.utils.cv_utils import create_cv_strategy
+from src.utils.core_utils import get_dataset_name, detect_task_type
+from src.mlops.utils.cv_utils import create_cv_strategy
+from src.mlops.utils.data_loader import load_csv_data
 
 # components機能インポート
 from src.mlops.components.pipeline import create_pipeline
 from src.mlops.components.visualization import create_visualizations
 from src.mlops.components.optimization import OptunaOptimizer
 from src.mlops.components.artifacts import save_model_artifacts, log_experiment_metrics, setup_mlflow_experiment, set_mlflow_tags, log_config_parameters, log_runtime_parameters, create_prediction_dataframe, save_prediction_results
-from src.utils.pipeline_utils import get_pipeline_feature_names
+from src.mlops.utils.pipeline_utils import get_pipeline_feature_names
 
 # matplotlib設定
 import os
@@ -68,8 +69,8 @@ def main(cfg: DictConfig):
         y = df[cfg.data.target_column]
         X_train, X_test, y_train, y_test = train_test_split(
             X, y,
-            test_size=cfg.data.test_size,
-            random_state=cfg.data.random_state
+            test_size=cfg.split.params.test_size,
+            random_state=cfg.split.params.random_state
         )
 
         print(f"🔍 Task Type: {detect_task_type(y)}")

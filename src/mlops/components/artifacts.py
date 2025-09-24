@@ -26,7 +26,7 @@ def save_model_artifacts(pipeline, feature_names, target_names, cfg):
 
 
 def log_config_parameters(cfg):
-    """実験設定全体をMLflowに記録（最短版）"""
+    """実験設定全体をMLflowに記録"""
     from omegaconf import OmegaConf
     for key, value in OmegaConf.to_container(cfg, resolve=True).items():
         mlflow.log_param(key, str(value))
@@ -173,7 +173,7 @@ def create_prediction_dataframe(pipeline, X_test, y_test, task_type, y_pred=None
         df_transformed = X_test_transformed.copy()
     else:
         # numpy arrayの場合（パイプライン変換後の正しい特徴量名を使用）
-        from src.utils.pipeline_utils import get_pipeline_feature_names
+        from src.mlops.utils.pipeline_utils import get_pipeline_feature_names
         original_feature_names = (X_test.columns.tolist()
                                 if hasattr(X_test, 'columns')
                                 else [f"feature_{i}" for i in range(X_test.shape[1])])

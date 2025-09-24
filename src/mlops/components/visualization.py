@@ -1,4 +1,4 @@
-"""可視化・解釈コンポーネント（リファクタリング版）"""
+"""可視化・解釈コンポーネント"""
 import tempfile
 import os
 import logging
@@ -63,7 +63,7 @@ class BaseVisualizer(ABC):
             self.X_test_transformed = X_current
 
         # 特徴量名（パイプライン変換後の正しい特徴量名を取得）
-        from src.utils.pipeline_utils import get_pipeline_feature_names
+        from src.mlops.utils.pipeline_utils import get_pipeline_feature_names
         original_feature_names = (X_train.columns.tolist()
                                 if hasattr(X_train, 'columns')
                                 else [f'feature_{i}' for i in range(X_train.shape[1])])
@@ -176,7 +176,7 @@ class PermutationImportanceVisualizer(BaseVisualizer):
 
     def create_plot(self, output_path: str) -> None:
         from sklearn.inspection import permutation_importance
-        from src.utils.pipeline_utils import get_transformed_data_with_feature_names
+        from src.mlops.utils.pipeline_utils import get_transformed_data_with_feature_names
 
         # 可視化前にmatplotlibをクリア
         plt.clf()
@@ -384,11 +384,11 @@ def _import_class(class_path: str):
 
 
 # ============================================================================
-# メイン関数（リファクタリング版）
+# メイン関数
 # ============================================================================
 
 def create_visualizations(pipeline, X_train, y_train, X_test, y_test, target_names_str, plot_types, cfg, task_type):
-    """可視化を設定駆動で作成（リファクタリング版）"""
+    """可視化を設定駆動で作成"""
 
     # YellowBrick状態リセットのためにmatplotlib完全初期化
     plt.rcdefaults()
